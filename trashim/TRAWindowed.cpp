@@ -41,7 +41,6 @@ namespace trashim
         int64_t   timer_frequency{ 0ll };
         int64_t   timer_previous{ 0ll };
         bool      vsync_enabled{ false };
-        HANDLE    frame_timer{ nullptr };
         bool      frame_timer_enabled{ false };
 
         // Real versions of the functions that are detoured. They are called directly by the shim dll when appropriate
@@ -237,7 +236,6 @@ namespace trashim
             DetourTransactionCommit();
 
             // Create the framerate timer.
-            frame_timer = CreateWaitableTimer(nullptr, true, nullptr);
             initialise_timer();
         }
 
@@ -251,6 +249,17 @@ namespace trashim
         initialise_timer();
     }
 
+    uint64_t get_frame_difference()
+    {
+        LARGE_INTEGER current_time;
+        QueryPerformanceCounter(&current_time);
+
+        int64_t difference = current_time.QuadPart - timer_previous;
+
+        auto difference_in_seconds = static_cast<float>(difference) / timer_frequency;
+        return difference_in_seconds * 1e7;
+    }
+
     void wait_for_frame()
     {
         // Only perform fixed framerate emulation when vsync is enabled.
@@ -259,26 +268,10 @@ namespace trashim
             return;
         }
 
-        LARGE_INTEGER current_time;
-        QueryPerformanceCounter(&current_time);
-
-        int64_t difference = current_time.QuadPart - timer_previous;
-
-        auto difference_in_seconds = static_cast<float>(difference) / timer_frequency;
-        auto difference_in_ns = difference_in_seconds * 1e7;
-
-        if (difference_in_ns >= desired_frame_interval)
+        while (get_frame_difference() < desired_frame_interval)
         {
-            update_timer();
-            return;
+            // Busy wait.
         }
-
-        LARGE_INTEGER time_to_wait;
-        time_to_wait.QuadPart = -(desired_frame_interval - difference_in_ns);
-        
-        SetWaitableTimer(frame_timer, &time_to_wait, 0, nullptr, nullptr, TRUE);
-
-        WaitForSingleObject(frame_timer, INFINITE);
 
         update_timer();
     }
