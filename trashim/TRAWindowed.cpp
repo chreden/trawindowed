@@ -253,11 +253,8 @@ namespace trashim
     {
         LARGE_INTEGER current_time;
         QueryPerformanceCounter(&current_time);
-
         int64_t difference = current_time.QuadPart - timer_previous;
-
-        auto difference_in_seconds = static_cast<float>(difference) / timer_frequency;
-        return difference_in_seconds * 1e7;
+        return (static_cast<double>(difference) / timer_frequency) * 1e7;
     }
 
     void wait_for_frame()
