@@ -16,6 +16,10 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 1. Start the game
 2. Press F5 to switch the mode
 
+### Toggle Always on Top
+1. Start the game
+2. Press F6 to toggle always on top
+
 ## Information for developers
 ### Build
 You need Visual Studio to compile the dll. Just import the ```trashim.sln``` project file. Before you start the build you have to change the active configuration to "Release" and "Win32" as target platform.

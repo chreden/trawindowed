@@ -158,6 +158,20 @@ namespace trashim
             resize_window(window_width, window_height);
         }
 
+        void toggle_on_top()
+        {
+            const auto style = GetWindowLongPtr(game_window, GWL_EXSTYLE);
+            if (style & WS_EX_TOPMOST)
+            {
+                SetWindowPos(game_window, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+                BringWindowToTop(game_window);
+            }
+            else
+            {
+                SetWindowPos(game_window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+            }
+        }
+
         void initialise_timer()
         {
             LARGE_INTEGER frequency;
@@ -185,6 +199,10 @@ namespace trashim
                     if (wParam == VK_F5)
                     {
                         toggle_border();
+                    }
+                    else if (wParam == VK_F6)
+                    {
+                        toggle_on_top();
                     }
                     break;
                 }
