@@ -257,6 +257,11 @@ namespace trashim
             initialise_timer();
         }
 
+        update_shim(back_buffer_width, back_buffer_height, display_width, display_height, vsync, framerate);
+    }
+
+    void update_shim(uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
+    {
         device_width = display_width;
         device_height = display_height;
         window_width = back_buffer_width;

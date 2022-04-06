@@ -98,10 +98,7 @@ struct ShimDirect3DDevice9 : IDirect3DDevice9
         return _device->GetNumberOfSwapChains();
     }
 
-    STDMETHOD(Reset)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters)
-    {
-        return _device->Reset(pPresentationParameters);
-    }
+    STDMETHOD(Reset)(THIS_ D3DPRESENT_PARAMETERS* pPresentationParameters);
 
     STDMETHOD(Present)(THIS_ CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion)
     {

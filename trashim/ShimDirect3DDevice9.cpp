@@ -36,3 +36,11 @@ HRESULT ShimDirect3DDevice9::Clear(THIS_ DWORD Count, CONST D3DRECT* pRects, DWO
     }
     return _device->Clear(Count, pRects, Flags, Color, Z, Stencil);
 }
+
+HRESULT ShimDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS* pPresentationParameters)
+{
+    D3DDISPLAYMODE mode;
+    GetDisplayMode(0, &mode);
+    trashim::update_shim(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight, mode.Width, mode.Height, pPresentationParameters->PresentationInterval != D3DPRESENT_INTERVAL_IMMEDIATE, pPresentationParameters->FullScreen_RefreshRateInHz);
+    return _device->Reset(pPresentationParameters);
+}
