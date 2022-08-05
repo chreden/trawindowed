@@ -11,6 +11,7 @@ namespace trashim
         // Whether or not to capture the mouse when the cursor is moved (apply a clip rectangle).
         // This is disabled when the window has lost focus.
         bool mouse_captured{ false };
+        bool capture_allowed{ true };
 
         // Style used to toggle on and off the bordered windowed mode.
         const LONG_PTR windowed_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -137,7 +138,7 @@ namespace trashim
         void capture_mouse()
         {
             // Allow the user to give control
-            if (!mouse_captured)
+            if (!mouse_captured && capture_allowed)
             {
                 mouse_captured = true;
                 while (ShowCursor(false) >= 0) {}
@@ -172,6 +173,19 @@ namespace trashim
             }
         }
 
+        void toggle_capture()
+        {
+            capture_allowed = !capture_allowed;
+            if (capture_allowed)
+            {
+                capture_mouse();
+            }
+            else
+            {
+                release_mouse();
+            }
+        }
+
         void initialise_timer()
         {
             LARGE_INTEGER frequency;
@@ -203,6 +217,10 @@ namespace trashim
                     else if (wParam == VK_F6)
                     {
                         toggle_on_top();
+                    }
+                    else if (wParam == VK_F8)
+                    {
+                        toggle_capture();
                     }
                     break;
                 }
