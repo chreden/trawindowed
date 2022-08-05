@@ -13,11 +13,6 @@ namespace trashim
         bool mouse_captured{ false };
         bool capture_allowed{ true };
 
-        bool is_mouse_captured()
-        {
-            return mouse_captured & capture_allowed;
-        }
-
         // Style used to toggle on and off the bordered windowed mode.
         const LONG_PTR windowed_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
