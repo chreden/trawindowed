@@ -1,4 +1,4 @@
-# TRAWindoed - Tomb Raider Windowed
+# TRAWindowed - Tomb Raider Windowed
 This is a custom d3d9.dll that enables more display modes for the three second era Tomb Raider games. This allows you to play the game in "windowed mode", as well as "borderless-window mode"
 
 ## Supported Games
@@ -19,6 +19,12 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 ### Toggle Always on Top
 1. Start the game
 2. Press F6 to toggle always on top
+
+### Toggle mouse capture
+1. Start the game
+2. Press F8 to toggle mouse capture.
+
+This can be useful if you want to interact with the TRAE Menu Hook.
 
 ## Information for developers
 ### Build
