@@ -52,15 +52,8 @@ struct ShimDirect3D9 : IDirect3D9
         return _d3d9->GetAdapterIdentifier(Adapter, Flags, pIdentifier);
     }
 
-    STDMETHOD_(UINT, GetAdapterModeCount)(THIS_ UINT Adapter, D3DFORMAT Format)
-    {
-        return _d3d9->GetAdapterModeCount(Adapter, Format);
-    }
-
-    STDMETHOD(EnumAdapterModes)(THIS_ UINT Adapter, D3DFORMAT Format, UINT Mode, D3DDISPLAYMODE* pMode)
-    {
-        return _d3d9->EnumAdapterModes(Adapter, Format, Mode, pMode);
-    }
+    STDMETHOD_(UINT, GetAdapterModeCount)(THIS_ UINT Adapter, D3DFORMAT Format);
+    STDMETHOD(EnumAdapterModes)(THIS_ UINT Adapter, D3DFORMAT Format, UINT Mode, D3DDISPLAYMODE* pMode);
 
     STDMETHOD(GetAdapterDisplayMode)(THIS_ UINT Adapter, D3DDISPLAYMODE* pMode)
     {

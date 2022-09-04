@@ -135,6 +135,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)/detours/include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -170,6 +171,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ShimDirect3DDevice9.h" />
     <ClInclude Include="TRAWindowed.h" />
     <ClInclude Include="ShimDirect3D9.h" />
@@ -191,6 +193,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="trashim.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="trashim.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
