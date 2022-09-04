@@ -31,7 +31,7 @@ namespace
 {
     std::unordered_map<UINT, std::vector<D3DDISPLAYMODE>> adapter_display_modes;
 
-    const std::vector<UINT> wanted_refresh_rates{ 20, 40, 60, 100, 144, 200 };
+    const std::vector<UINT> wanted_refresh_rates{ 20, 40, 60, 100, 144 };
 
     std::vector<D3DDISPLAYMODE> store_display_modes(IDirect3D9& d3d9, UINT adapter, D3DFORMAT format)
     {
