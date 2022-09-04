@@ -3,12 +3,35 @@
 #include "ShimDirect3DDevice9.h"
 #include "TRAWindowed.h"
 #include <unordered_map>
+#include <set>
+#include <functional>
+
+namespace
+{
+    struct Resolution
+    {
+        UINT width;
+        UINT height;
+        auto operator<=>(const Resolution&) const = default;
+    };
+}
+
+template <>
+struct std::hash<Resolution>
+{
+    std::size_t operator()(const Resolution& res) const noexcept
+    {
+        std::size_t h1 = std::hash<UINT>{}(res.width);
+        std::size_t h2 = std::hash<UINT>{}(res.height);
+        return h1 ^ (h2 << 1);
+    }
+};
 
 namespace
 {
     std::unordered_map<UINT, std::vector<D3DDISPLAYMODE>> adapter_display_modes;
 
-    const std::vector<UINT> wanted_refresh_rates{ 20, 30, 40, 50, 60, 70, 75, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200 };
+    const std::vector<UINT> wanted_refresh_rates{ 20, 40, 60, 100, 144, 200 };
 
     std::vector<D3DDISPLAYMODE> store_display_modes(IDirect3D9& d3d9, UINT adapter, D3DFORMAT format)
     {
@@ -18,32 +41,34 @@ namespace
             return found->second;
         }
 
-        std::vector<D3DDISPLAYMODE> modes;
-        uint32_t actual_count = d3d9.GetAdapterModeCount(adapter, format);
-        for (uint32_t i = 0; i < actual_count; ++i)
+        std::unordered_map<Resolution, std::set<UINT>> framerates;
+        for (uint32_t i = 0; i < d3d9.GetAdapterModeCount(adapter, format); ++i)
         {
-            D3DDISPLAYMODE mode {};
+            D3DDISPLAYMODE mode{};
             d3d9.EnumAdapterModes(adapter, format, i, &mode);
-            modes.push_back(mode);
+            framerates[{mode.Width, mode.Height}].insert(mode.RefreshRate);
         }
 
-        // TODO: Find the missing framerates - we want to provide 20-200
-        // TODO: Add the missing framerates.
-        for (auto rate : wanted_refresh_rates)
+        for (auto& resolution : framerates)
         {
-            bool found = false;
-            for (const auto& mode : modes)
+            for (const auto& rate : wanted_refresh_rates)
             {
-                if (mode.Width == 1024 && mode.Height == 768 && mode.RefreshRate == rate)
-                {
-                    found = true;
-                    break;
-                }
+                resolution.second.insert(rate);
             }
+        }
 
-            if (!found)
+        std::vector<D3DDISPLAYMODE> modes;
+        for (const auto& resolution : framerates)
+        {
+            for (const auto& rate : resolution.second)
             {
-                modes.push_back(D3DDISPLAYMODE{ 1024, 768, rate, format });
+                modes.push_back(
+                    {
+                        resolution.first.width,
+                        resolution.first.height,
+                        rate,
+                        format
+                    });
             }
         }
 
