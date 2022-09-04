@@ -67,7 +67,7 @@ BEGIN
     BEGIN
         BLOCK "080904b0"
         BEGIN
-            VALUE "CompanyName", "chreden"
+            VALUE "CompanyName", "https://github.com/chreden/trawindowed"
             VALUE "FileDescription", "Windowed DLL for TR LAU"
             VALUE "FileVersion", "1.4.0.0"
             VALUE "InternalName", "d3d9.dll"
