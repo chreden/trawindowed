@@ -8,6 +8,8 @@ namespace
 {
     std::unordered_map<UINT, std::vector<D3DDISPLAYMODE>> adapter_display_modes;
 
+    const std::vector<UINT> wanted_refresh_rates{ 20, 30, 40, 50, 60, 70, 75, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200 };
+
     std::vector<D3DDISPLAYMODE> store_display_modes(IDirect3D9& d3d9, UINT adapter, D3DFORMAT format)
     {
         auto found = adapter_display_modes.find(adapter);
@@ -27,8 +29,26 @@ namespace
 
         // TODO: Find the missing framerates - we want to provide 20-200
         // TODO: Add the missing framerates.
+        for (auto rate : wanted_refresh_rates)
+        {
+            bool found = false;
+            for (const auto& mode : modes)
+            {
+                if (mode.Width == 1024 && mode.Height == 768 && mode.RefreshRate == rate)
+                {
+                    found = true;
+                    break;
+                }
+            }
 
-        adapter_display_modes.insert({ adapter, modes });
+            if (!found)
+            {
+                modes.push_back(D3DDISPLAYMODE{ 1024, 768, rate, format });
+            }
+        }
+
+        adapter_display_modes[adapter] = modes;
+        return modes;
     }
 }
 
