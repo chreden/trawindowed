@@ -3,6 +3,8 @@
 
 #include <detours.h>
 #include <windowsx.h>
+#include <shellapi.h>
+#include <algorithm>
 
 namespace trashim
 {
@@ -252,6 +254,13 @@ namespace trashim
             }
             return CallWindowProc(original_wndproc, window, msg, wParam, lParam);
         }
+
+        bool should_start_borderless()
+        {
+            int number_of_arguments = 0;
+            const auto const args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-borderless") != nullptr; });
+        }
     }
 
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
@@ -261,6 +270,10 @@ namespace trashim
         {
             game_window = window;
             SetWindowLongPtr(game_window, GWL_STYLE, windowed_style);
+            if (should_start_borderless())
+            {
+                toggle_border();
+            }
             original_wndproc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)subclass_wndproc);
 
             // Only detour the first time.

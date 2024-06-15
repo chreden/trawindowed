@@ -14,7 +14,7 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 
 ### Switch display modes
 1. Start the game
-2. Press F5 to switch the mode
+2. Press F5 to switch between bordered and borderless windowed mode.
 
 ### Toggle Always on Top
 1. Start the game
@@ -25,6 +25,9 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 2. Press F8 to toggle mouse capture.
 
 This can be useful if you want to interact with the TRAE Menu Hook.
+
+### Command Line Arguments
+Passing `-borderless` to the game exe will launch the game in borderless window mode (as if you had started the game and pressed the toggle button). This can be set via "Launch Options" in Steam.
 
 ## Information for developers
 ### Build
