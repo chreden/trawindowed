@@ -14,6 +14,7 @@ namespace trashim
         // This is disabled when the window has lost focus.
         bool mouse_captured{ false };
         bool capture_allowed{ true };
+        bool camera_fix{ false };
 
         // Style used to toggle on and off the bordered windowed mode.
         const LONG_PTR windowed_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -63,7 +64,10 @@ namespace trashim
         BOOL WINAPI FixedGetCursorPos(LPPOINT output)
         {
             auto result = RealGetCursorPos(output);
-            ScreenToClient(game_window, output);
+            if (!camera_fix)
+            {
+                ScreenToClient(game_window, output);
+            }
             return result;
         }
 
@@ -261,6 +265,13 @@ namespace trashim
             const auto const args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
             return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-borderless") != nullptr; });
         }
+
+        bool is_camera_fix_enabled()
+        {
+            int number_of_arguments = 0;
+            const auto const args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-camerafix") != nullptr; });
+        }
     }
 
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
@@ -268,6 +279,8 @@ namespace trashim
         // Only set the windowed style the first time the window is seen.
         if (!game_window)
         {
+            camera_fix = is_camera_fix_enabled();
+
             game_window = window;
             SetWindowLongPtr(game_window, GWL_STYLE, windowed_style);
             if (should_start_borderless())
