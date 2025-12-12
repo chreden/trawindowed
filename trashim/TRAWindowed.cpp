@@ -151,6 +151,26 @@ namespace trashim
             }
         }
 
+        void centre_window()
+        {
+            RECT rect{ 0, 0, static_cast<LONG>(window_width), static_cast<LONG>(window_height) };
+            LONG_PTR style = GetWindowLongPtr(game_window, GWL_STYLE);
+            AdjustWindowRect(&rect, style, false);
+
+            const HMONITOR monitor = MonitorFromWindow(game_window, MONITOR_DEFAULTTOPRIMARY);
+            MONITORINFO info{ .cbSize = sizeof(MONITORINFO) };
+            GetMonitorInfo(monitor, &info);
+
+            const LONG screen_width = info.rcMonitor.right - info.rcMonitor.left;
+            const LONG screen_height = info.rcMonitor.bottom - info.rcMonitor.top;
+            const LONG width = rect.right - rect.left;
+            const LONG height = rect.bottom - rect.top;
+
+            const LONG x = info.rcMonitor.left + (screen_width / 2) - (width / 2);
+            const LONG y = info.rcMonitor.top + (screen_height / 2) - (height / 2);
+            SetWindowPos(game_window, nullptr, x, y, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE);
+        }
+
         void release_mouse()
         {
             mouse_captured = false;
@@ -218,7 +238,14 @@ namespace trashim
                 {
                     if (wParam == VK_F5)
                     {
-                        toggle_border();
+                        if (GetKeyState(VK_SHIFT) & 0x8000)
+                        {
+                            centre_window();
+                        }
+                        else
+                        {
+                            toggle_border();
+                        }
                     }
                     else if (wParam == VK_F6)
                     {
@@ -262,21 +289,29 @@ namespace trashim
         bool should_start_borderless()
         {
             int number_of_arguments = 0;
-            const auto const args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
             return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-borderless") != nullptr; });
         }
 
         bool is_camera_fix_enabled()
         {
             int number_of_arguments = 0;
-            const auto const args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
             return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-camerafix") != nullptr; });
+        }
+
+        bool is_centering_enabled()
+        {
+            int number_of_arguments = 0;
+            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-autocenter") != nullptr; });
         }
     }
 
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
     {
         // Only set the windowed style the first time the window is seen.
+        bool need_auto_centering = false;
         if (!game_window)
         {
             camera_fix = is_camera_fix_enabled();
@@ -287,6 +322,7 @@ namespace trashim
             {
                 toggle_border();
             }
+            need_auto_centering = is_centering_enabled();
             original_wndproc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)subclass_wndproc);
 
             // Only detour the first time.
@@ -309,6 +345,11 @@ namespace trashim
         vsync_enabled = vsync;
         resize_window(window_width, window_height);
         initialise_timer();
+
+        if (need_auto_centering)
+        {
+            centre_window();
+        }
     }
 
     uint64_t get_frame_difference()

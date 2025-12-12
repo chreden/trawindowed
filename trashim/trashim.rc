@@ -71,7 +71,7 @@ BEGIN
             VALUE "FileDescription", "Windowed DLL for TR LAU"
             VALUE "FileVersion", "1.6.0.0"
             VALUE "InternalName", "d3d9.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2024"
+            VALUE "LegalCopyright", "Copyright (C) chreden 2025"
             VALUE "OriginalFilename", "d3d9.dll"
             VALUE "ProductName", "chreden/trawindowed"
             VALUE "ProductVersion", "1.6.0.0"

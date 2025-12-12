@@ -16,6 +16,10 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 1. Start the game
 2. Press F5 to switch between bordered and borderless windowed mode.
 
+### Center the window
+1. Start the game
+2. Press Shift + F5 to center the window on the monitor the window is currently on.
+
 ### Toggle Always on Top
 1. Start the game
 2. Press F6 to toggle always on top
@@ -27,8 +31,11 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 This can be useful if you want to interact with the TRAE Menu Hook.
 
 ### Command Line Arguments
-Passing `-borderless` to the game exe will launch the game in borderless window mode (as if you had started the game and pressed the toggle button). This can be set via "Launch Options" in Steam.
-Passing `-camerafix` to the game exe will fix an issue with the camera (if it gets stuck looking down). This can be set via "Launch Options" in Steam.
+These can all be added via the "Launch Options" in Steam.
+
+- Passing `-borderless` to the game exe will launch the game in borderless window mode (as if you had started the game and pressed the toggle button).
+- Passing `-camerafix` to the game exe will fix an issue with the camera (if it gets stuck looking down).
+- Passing `-autocenter` to the game exe will start the window in the center of the primary display. Underworld may need to be manually centered.
 
 ## Information for developers
 ### Build
