@@ -33,9 +33,9 @@ This can be useful if you want to interact with the TRAE Menu Hook.
 ### Command Line Arguments
 These can all be added via the "Launch Options" in Steam.
 
-Passing `-borderless` to the game exe will launch the game in borderless window mode (as if you had started the game and pressed the toggle button).
-Passing `-camerafix` to the game exe will fix an issue with the camera (if it gets stuck looking down).
-Passing `-autocenter` to the game exe will start the window in the center of the primary display. Underworld may need to be manually centered.
+- Passing `-borderless` to the game exe will launch the game in borderless window mode (as if you had started the game and pressed the toggle button).
+- Passing `-camerafix` to the game exe will fix an issue with the camera (if it gets stuck looking down).
+- Passing `-autocenter` to the game exe will start the window in the center of the primary display. Underworld may need to be manually centered.
 
 ## Information for developers
 ### Build
