@@ -5,6 +5,7 @@
 #include <windowsx.h>
 #include <shellapi.h>
 #include <algorithm>
+#include <string>
 
 namespace trashim
 {
@@ -286,25 +287,45 @@ namespace trashim
             return CallWindowProc(original_wndproc, window, msg, wParam, lParam);
         }
 
-        bool should_start_borderless()
+        bool is_arg_present(const wchar_t* arg)
         {
             int number_of_arguments = 0;
             const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-borderless") != nullptr; });
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [arg](auto str) { return wcsstr(str, arg) != nullptr; });
+        }
+
+        bool should_start_borderless()
+        {
+            return is_arg_present(L"-borderless");
         }
 
         bool is_camera_fix_enabled()
         {
-            int number_of_arguments = 0;
-            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-camerafix") != nullptr; });
+            return is_arg_present(L"-camerafix");
         }
 
         bool is_centering_enabled()
         {
-            int number_of_arguments = 0;
-            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-autocenter") != nullptr; });
+            return is_arg_present(L"-autocenter");
+        }
+
+        bool is_aspect_fix_disabled()
+        {
+            return is_arg_present(L"-disableaspectfix");
+        }
+
+        void apply_aspect_ratio()
+        {
+            wchar_t path[MAX_PATH];
+            if (!is_aspect_fix_disabled() &&
+                0 != GetModuleFileName(NULL, path, MAX_PATH) &&
+                std::wstring(path).contains(L"tru.exe"))
+            {
+                // Some sort of graphics related struct pointer - at 0x170 offset is the aspect ratio x 10000.
+                char* ptr = *reinterpret_cast<char**>(0x00ad75e4);
+                int* aspect_ratio = reinterpret_cast<int*>(ptr + 0x170);
+                *aspect_ratio = (static_cast<float>(window_width) / static_cast<float>(window_height)) * 10000;
+            }
         }
     }
 
@@ -345,6 +366,7 @@ namespace trashim
         vsync_enabled = vsync;
         resize_window(window_width, window_height);
         initialise_timer();
+        apply_aspect_ratio();
 
         if (need_auto_centering)
         {
