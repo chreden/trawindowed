@@ -142,13 +142,26 @@ namespace trashim
             return MAKELPARAM(new_x, new_y);
         }
 
+        // Helpers to always hide/show the cursor while the app is in the foreground.
+        void hide_cursor_foreground()
+        {
+            // Ensure the cursor is hidden (loop until ShowCursor returns negative).
+            while (ShowCursor(false) >= 0) {}
+        }
+
+        void show_cursor_foreground()
+        {
+            // Ensure the cursor is visible (loop until ShowCursor returns non-negative).
+            while (ShowCursor(true) < 0) {}
+        }
+
         void capture_mouse()
         {
             // Allow the user to give control
             if (!mouse_captured && capture_allowed)
             {
                 mouse_captured = true;
-                while (ShowCursor(false) >= 0) {}
+                hide_cursor_foreground();
             }
         }
 
@@ -176,7 +189,7 @@ namespace trashim
         {
             mouse_captured = false;
             RealClipCursor(nullptr);
-            while (ShowCursor(true) < 0) {}
+            show_cursor_foreground();
         }
 
         void toggle_border()
@@ -258,9 +271,17 @@ namespace trashim
                     }
                     break;
                 }
+                case WM_SETFOCUS:
+                {
+                    // Hide cursor whenever the window gains focus (foreground).
+                    hide_cursor_foreground();
+                    break;
+                }
                 case WM_KILLFOCUS:
                 {
+                    // Restore cursor visibility and release capture when losing focus.
                     release_mouse();
+                    show_cursor_foreground();
                     break;
                 }
                 case WM_LBUTTONDOWN:
@@ -327,6 +348,20 @@ namespace trashim
                 *aspect_ratio = (static_cast<float>(window_width) / static_cast<float>(window_height)) * 10000;
             }
         }
+
+        bool should_start_notontop()
+        {
+            int number_of_arguments = 0;
+            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-notontop") != nullptr; });
+        }
+
+        bool should_start_mousecaptured()
+        {
+            int number_of_arguments = 0;
+            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-mousecaptured") != nullptr; });
+        }
     }
 
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
@@ -343,8 +378,24 @@ namespace trashim
             {
                 toggle_border();
             }
+            if (should_start_notontop())
+            {
+                toggle_on_top();
+            }
+            if (should_start_mousecaptured())
+            {
+                toggle_capture();
+            }
+
             need_auto_centering = is_centering_enabled();
+
             original_wndproc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)subclass_wndproc);
+
+            // If our window is already the foreground window, hide the cursor now.
+            if (GetForegroundWindow() == game_window)
+            {
+                hide_cursor_foreground();
+            }
 
             // Only detour the first time.
             DetourTransactionBegin();
