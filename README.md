@@ -37,6 +37,8 @@ These can all be added via the "Launch Options" in Steam.
 - Passing `-camerafix` to the game exe will fix an issue with the camera (if it gets stuck looking down).
 - Passing `-autocenter` to the game exe will start the window in the center of the primary display. Underworld may need to be manually centered.
 - Passing `-disableaspectfix` to the game exe will stop the TRU aspect ratio being calculated based on the window size and will use the game setting instead.
+- Passing `-ontop` to the game exe will start the window on top.
+- Passing `-nomousecapture` will start the game without forcing mouse capture.
 
 ## Information for developers
 ### Build

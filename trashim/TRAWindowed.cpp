@@ -142,16 +142,13 @@ namespace trashim
             return MAKELPARAM(new_x, new_y);
         }
 
-        // Helpers to always hide/show the cursor while the app is in the foreground.
-        void hide_cursor_foreground()
+        void hide_cursor()
         {
-            // Ensure the cursor is hidden (loop until ShowCursor returns negative).
             while (ShowCursor(false) >= 0) {}
         }
 
-        void show_cursor_foreground()
+        void show_cursor()
         {
-            // Ensure the cursor is visible (loop until ShowCursor returns non-negative).
             while (ShowCursor(true) < 0) {}
         }
 
@@ -161,7 +158,7 @@ namespace trashim
             if (!mouse_captured && capture_allowed)
             {
                 mouse_captured = true;
-                hide_cursor_foreground();
+                hide_cursor();
             }
         }
 
@@ -189,7 +186,7 @@ namespace trashim
         {
             mouse_captured = false;
             RealClipCursor(nullptr);
-            show_cursor_foreground();
+            show_cursor();
         }
 
         void toggle_border()
@@ -273,15 +270,12 @@ namespace trashim
                 }
                 case WM_SETFOCUS:
                 {
-                    // Hide cursor whenever the window gains focus (foreground).
-                    hide_cursor_foreground();
+                    capture_mouse();
                     break;
                 }
                 case WM_KILLFOCUS:
                 {
-                    // Restore cursor visibility and release capture when losing focus.
                     release_mouse();
-                    show_cursor_foreground();
                     break;
                 }
                 case WM_LBUTTONDOWN:
@@ -349,18 +343,14 @@ namespace trashim
             }
         }
 
-        bool should_start_notontop()
+        bool should_start_ontop()
         {
-            int number_of_arguments = 0;
-            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-notontop") != nullptr; });
+            return is_arg_present(L"-ontop");
         }
 
-        bool should_start_mousecaptured()
+        bool should_start_without_mouse_capture()
         {
-            int number_of_arguments = 0;
-            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-mousecaptured") != nullptr; });
+            return is_arg_present(L"-nomousecapture");
         }
     }
 
@@ -378,13 +368,15 @@ namespace trashim
             {
                 toggle_border();
             }
-            if (should_start_notontop())
+
+            if (!should_start_ontop())
             {
                 toggle_on_top();
             }
-            if (should_start_mousecaptured())
+
+            if (!should_start_without_mouse_capture())
             {
-                toggle_capture();
+                capture_mouse();
             }
 
             need_auto_centering = is_centering_enabled();
@@ -394,7 +386,7 @@ namespace trashim
             // If our window is already the foreground window, hide the cursor now.
             if (GetForegroundWindow() == game_window)
             {
-                hide_cursor_foreground();
+                hide_cursor();
             }
 
             // Only detour the first time.
