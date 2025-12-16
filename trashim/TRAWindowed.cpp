@@ -5,6 +5,7 @@
 #include <windowsx.h>
 #include <shellapi.h>
 #include <algorithm>
+#include <string>
 
 namespace trashim
 {
@@ -164,6 +165,26 @@ namespace trashim
             }
         }
 
+        void centre_window()
+        {
+            RECT rect{ 0, 0, static_cast<LONG>(window_width), static_cast<LONG>(window_height) };
+            LONG_PTR style = GetWindowLongPtr(game_window, GWL_STYLE);
+            AdjustWindowRect(&rect, style, false);
+
+            const HMONITOR monitor = MonitorFromWindow(game_window, MONITOR_DEFAULTTOPRIMARY);
+            MONITORINFO info{ .cbSize = sizeof(MONITORINFO) };
+            GetMonitorInfo(monitor, &info);
+
+            const LONG screen_width = info.rcMonitor.right - info.rcMonitor.left;
+            const LONG screen_height = info.rcMonitor.bottom - info.rcMonitor.top;
+            const LONG width = rect.right - rect.left;
+            const LONG height = rect.bottom - rect.top;
+
+            const LONG x = info.rcMonitor.left + (screen_width / 2) - (width / 2);
+            const LONG y = info.rcMonitor.top + (screen_height / 2) - (height / 2);
+            SetWindowPos(game_window, nullptr, x, y, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE);
+        }
+
         void release_mouse()
         {
             mouse_captured = false;
@@ -231,7 +252,14 @@ namespace trashim
                 {
                     if (wParam == VK_F5)
                     {
-                        toggle_border();
+                        if (GetKeyState(VK_SHIFT) & 0x8000)
+                        {
+                            centre_window();
+                        }
+                        else
+                        {
+                            toggle_border();
+                        }
                     }
                     else if (wParam == VK_F6)
                     {
@@ -280,18 +308,45 @@ namespace trashim
             return CallWindowProc(original_wndproc, window, msg, wParam, lParam);
         }
 
-        bool should_start_borderless()
+        bool is_arg_present(const wchar_t* arg)
         {
             int number_of_arguments = 0;
             const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-borderless") != nullptr; });
+            return args != nullptr && std::any_of(args, args + number_of_arguments, [arg](auto str) { return wcsstr(str, arg) != nullptr; });
+        }
+
+        bool should_start_borderless()
+        {
+            return is_arg_present(L"-borderless");
         }
 
         bool is_camera_fix_enabled()
         {
-            int number_of_arguments = 0;
-            const auto args = CommandLineToArgvW(GetCommandLine(), &number_of_arguments);
-            return args != nullptr && std::any_of(args, args + number_of_arguments, [](auto str) { return wcsstr(str, L"-camerafix") != nullptr; });
+            return is_arg_present(L"-camerafix");
+        }
+
+        bool is_centering_enabled()
+        {
+            return is_arg_present(L"-autocenter");
+        }
+
+        bool is_aspect_fix_disabled()
+        {
+            return is_arg_present(L"-disableaspectfix");
+        }
+
+        void apply_aspect_ratio()
+        {
+            wchar_t path[MAX_PATH];
+            if (!is_aspect_fix_disabled() &&
+                0 != GetModuleFileName(NULL, path, MAX_PATH) &&
+                std::wstring(path).contains(L"tru.exe"))
+            {
+                // Some sort of graphics related struct pointer - at 0x170 offset is the aspect ratio x 10000.
+                char* ptr = *reinterpret_cast<char**>(0x00ad75e4);
+                int* aspect_ratio = reinterpret_cast<int*>(ptr + 0x170);
+                *aspect_ratio = (static_cast<float>(window_width) / static_cast<float>(window_height)) * 10000;
+            }
         }
 
         bool should_start_notontop()
@@ -312,6 +367,7 @@ namespace trashim
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
     {
         // Only set the windowed style the first time the window is seen.
+        bool need_auto_centering = false;
         if (!game_window)
         {
             camera_fix = is_camera_fix_enabled();
@@ -330,6 +386,9 @@ namespace trashim
             {
                 toggle_capture();
             }
+
+            need_auto_centering = is_centering_enabled();
+
             original_wndproc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)subclass_wndproc);
 
             // If our window is already the foreground window, hide the cursor now.
@@ -358,6 +417,12 @@ namespace trashim
         vsync_enabled = vsync;
         resize_window(window_width, window_height);
         initialise_timer();
+        apply_aspect_ratio();
+
+        if (need_auto_centering)
+        {
+            centre_window();
+        }
     }
 
     uint64_t get_frame_difference()
