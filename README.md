@@ -14,15 +14,15 @@ This is a custom d3d9.dll that enables more display modes for the three second e
 
 ### Switch display modes
 1. Start the game
-2. Press F5 to switch between bordered and borderless windowed mode.
+2. Press F6 to switch between bordered and borderless windowed mode.
 
 ### Center the window
 1. Start the game
-2. Press Shift + F5 to center the window on the monitor the window is currently on.
+2. Press Shift + F6 to center the window on the monitor the window is currently on.
 
 ### Toggle Always on Top
 1. Start the game
-2. Press F6 to toggle always on top
+2. Press F7 to toggle always on top
 
 ### Toggle mouse capture
 1. Start the game

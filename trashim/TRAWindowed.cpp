@@ -247,7 +247,7 @@ namespace trashim
             {
                 case WM_KEYDOWN:
                 {
-                    if (wParam == VK_F5)
+                    if (wParam == VK_F6)
                     {
                         if (GetKeyState(VK_SHIFT) & 0x8000)
                         {
@@ -258,7 +258,7 @@ namespace trashim
                             toggle_border();
                         }
                     }
-                    else if (wParam == VK_F6)
+                    else if (wParam == VK_F7)
                     {
                         toggle_on_top();
                     }
