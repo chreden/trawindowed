@@ -39,6 +39,7 @@ These can all be added via the "Launch Options" in Steam.
 - Passing `-disableaspectfix` to the game exe will stop the TRU aspect ratio being calculated based on the window size and will use the game setting instead.
 - Passing `-ontop` to the game exe will start the window on top.
 - Passing `-nomousecapture` will start the game without forcing mouse capture.
+- Passing `-nolimiter` disables the custom frame limiter and lets D3D9/DWM handle vsync natively. This can fix stuttering on modern versions of Windows (e.g. TRU on Windows 11).
 
 ## Information for developers
 ### Build

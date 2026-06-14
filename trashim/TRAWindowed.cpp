@@ -16,6 +16,7 @@ namespace trashim
         bool mouse_captured{ false };
         bool capture_allowed{ true };
         bool camera_fix{ false };
+        bool want_on_top{ false };
 
         // Style used to toggle on and off the bordered windowed mode.
         const LONG_PTR windowed_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -52,6 +53,18 @@ namespace trashim
         BOOL(WINAPI * RealGetCursorPos)(LPPOINT) = GetCursorPos;
         BOOL(WINAPI * RealSetCursorPos)(int, int) = SetCursorPos;
         BOOL(WINAPI * RealClipCursor)(const RECT*) = ClipCursor;
+        BOOL(WINAPI * RealSetWindowPos)(HWND, HWND, int, int, int, int, UINT) = SetWindowPos;
+
+        // Prevents the game from forcing itself on top when the user hasn't requested it.
+        // The game repeatedly calls SetWindowPos with HWND_TOPMOST as part of its fullscreen logic.
+        BOOL WINAPI FixedSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags)
+        {
+            if (!want_on_top && hWnd == game_window && hWndInsertAfter == HWND_TOPMOST)
+            {
+                hWndInsertAfter = HWND_NOTOPMOST;
+            }
+            return RealSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
+        }
 
         // Stops the game from doing any cursor clipping - we do this ourselves based on whether
         // we are currently capturing the mouse.
@@ -196,18 +209,18 @@ namespace trashim
             resize_window(window_width, window_height);
         }
 
+        // Forward declaration
+        void set_on_top(bool on_top);
+
         void toggle_on_top()
         {
-            const auto style = GetWindowLongPtr(game_window, GWL_EXSTYLE);
-            if (style & WS_EX_TOPMOST)
-            {
-                SetWindowPos(game_window, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-                BringWindowToTop(game_window);
-            }
-            else
-            {
-                SetWindowPos(game_window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-            }
+            set_on_top(!want_on_top);
+        }
+
+        void set_on_top(bool on_top)
+        {
+            want_on_top = on_top;
+            RealSetWindowPos(game_window, on_top ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         }
 
         void toggle_capture()
@@ -352,6 +365,11 @@ namespace trashim
         {
             return is_arg_present(L"-nomousecapture");
         }
+
+        bool is_limiter_disabled()
+        {
+            return is_arg_present(L"-nolimiter");
+        }
     }
 
     void initialise_shim(HWND window, uint32_t back_buffer_width, uint32_t back_buffer_height, uint32_t display_width, uint32_t display_height, bool vsync, uint32_t framerate)
@@ -369,9 +387,13 @@ namespace trashim
                 toggle_border();
             }
 
-            if (!should_start_ontop())
+            if (should_start_ontop())
             {
-                toggle_on_top();
+                set_on_top(true);
+            }
+            else
+            {
+                set_on_top(false);
             }
 
             if (!should_start_without_mouse_capture())
@@ -395,6 +417,7 @@ namespace trashim
             DetourAttach(&(PVOID&)RealGetCursorPos, FixedGetCursorPos);
             DetourAttach(&(PVOID&)RealSetCursorPos, FixedSetCursorPos);
             DetourAttach(&(PVOID&)RealClipCursor, FixedClipCursor);
+            DetourAttach(&(PVOID&)RealSetWindowPos, FixedSetWindowPos);
             DetourTransactionCommit();
 
             // Create the framerate timer.
@@ -433,6 +456,12 @@ namespace trashim
             return;
         }
 
+        // When -nolimiter is set, let D3D9/DWM handle vsync natively.
+        if (is_limiter_disabled())
+        {
+            return;
+        }
+
         while (get_frame_difference() < desired_frame_interval)
         {
             // Busy wait.
@@ -444,5 +473,10 @@ namespace trashim
     void start_fps_emulation()
     {
         frame_timer_enabled = true;
+    }
+
+    bool no_limiter_enabled()
+    {
+        return is_limiter_disabled();
     }
 }

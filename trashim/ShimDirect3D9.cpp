@@ -89,7 +89,10 @@ HRESULT ShimDirect3D9::CreateDevice(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, H
 
     pPresentationParameters->Windowed = TRUE;
     pPresentationParameters->FullScreen_RefreshRateInHz = 0;
-    pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+    if (!trashim::no_limiter_enabled())
+    {
+        pPresentationParameters->PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+    }
 
     IDirect3DDevice9* device = nullptr;
     HRESULT hr = _d3d9->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, &device);

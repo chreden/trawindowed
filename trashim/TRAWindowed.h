@@ -12,4 +12,8 @@ namespace trashim
     void wait_for_frame();
 
     void start_fps_emulation();
+
+    // Returns true when -nolimiter is passed, indicating the custom frame
+    // limiter should be skipped in favour of native D3D9/DWM vsync.
+    bool no_limiter_enabled();
 }
